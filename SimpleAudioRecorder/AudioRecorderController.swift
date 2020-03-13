@@ -44,6 +44,11 @@ class AudioRecorderController: UIViewController {
                                                                    weight: .regular)
         
         loadAudio()
+        updateViews()
+    }
+    
+    func updateViews() {
+        playButton.isSelected = isPlaying
     }
     
     
@@ -109,6 +114,7 @@ class AudioRecorderController: UIViewController {
         do {
             try prepareAudioSession()
             audioPlayer?.play()
+            updateViews()
         } catch {
             print("Cannot play audio: \(error)")
         }
@@ -116,6 +122,7 @@ class AudioRecorderController: UIViewController {
     
     func pause() {
         audioPlayer?.pause()
+        updateViews()
     }
     
     
