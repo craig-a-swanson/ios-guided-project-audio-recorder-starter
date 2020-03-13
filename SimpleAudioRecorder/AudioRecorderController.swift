@@ -213,6 +213,7 @@ class AudioRecorderController: UIViewController {
         
         do {
             audioRecorder = try AVAudioRecorder(url: recordingURL!, format: format)
+            audioRecorder?.delegate = self
             audioRecorder?.record()
         } catch {
             preconditionFailure("The audio recorder could not be created with \(recordingURL!) and \(format)")
@@ -262,6 +263,19 @@ extension AudioRecorderController: AVAudioPlayerDelegate {
         if let error = error {
             print("Audio Player Error: \(error)")
             // In a real app, actually present an error message to the user.
+        }
+    }
+}
+extension AudioRecorderController: AVAudioRecorderDelegate {
+    func audioRecorderDidFinishRecording(_ recorder: AVAudioRecorder, successfully flag: Bool) {
+        if let recordingURL = recordingURL {
+            audioPlayer = try? AVAudioPlayer(contentsOf: recordingURL)
+        }
+        audioRecorder = nil
+    }
+    func audioRecorderEncodeErrorDidOccur(_ recorder: AVAudioRecorder, error: Error?) {
+        if let error = error {
+            print("Audio Recorder Error: \(error)")
         }
     }
 }
