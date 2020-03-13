@@ -16,6 +16,7 @@ class AudioRecorderController: UIViewController {
             guard let audioPlayer = audioPlayer else { return }
             audioPlayer.delegate = self
             audioPlayer.isMeteringEnabled = true
+            updateViews()
         }
     }
     
@@ -55,22 +56,45 @@ class AudioRecorderController: UIViewController {
                                                                    weight: .regular)
         
         loadAudio()
-        updateViews()
     }
     
+//    func updateViews() {
+//        playButton.isSelected = isPlaying
+//
+//        let elapsedTime = audioPlayer?.currentTime ?? 0
+//        let duration = audioPlayer?.duration ?? 0
+//        let timeRemaining = duration.rounded() - elapsedTime
+//
+//        timeElapsedLabel.text = timeIntervalFormatter.string(from: elapsedTime)
+//        timeSlider.minimumValue = 0
+//        timeSlider.maximumValue = Float(duration)
+//        timeSlider.value = Float(elapsedTime)
+//
+//        timeRemainingLabel.text = "-" + timeIntervalFormatter.string(from: timeRemaining)!
+//    }
     func updateViews() {
+        playButton.isEnabled = !isRecording
+        recordButton.isEnabled = !isPlaying
+        timeSlider.isEnabled = !isRecording
         playButton.isSelected = isPlaying
-        
-        let elapsedTime = audioPlayer?.currentTime ?? 0
-        let duration = audioPlayer?.duration ?? 0
-        let timeRemaining = duration.rounded() - elapsedTime
-        
-        timeElapsedLabel.text = timeIntervalFormatter.string(from: elapsedTime)
-        timeSlider.minimumValue = 0
-        timeSlider.maximumValue = Float(duration)
-        timeSlider.value = Float(elapsedTime)
-        
-        timeRemainingLabel.text = "-" + timeIntervalFormatter.string(from: timeRemaining)!
+        recordButton.isSelected = isRecording
+        if !isRecording {
+            let elapsedTime = audioPlayer?.currentTime ?? 0
+            let duration = audioPlayer?.duration ?? 0
+            let timeRemaining = duration.rounded() - elapsedTime
+            timeElapsedLabel.text = timeIntervalFormatter.string(from: elapsedTime)
+            timeSlider.minimumValue = 0
+            timeSlider.maximumValue = Float(duration)
+            timeSlider.value = Float(elapsedTime)
+            timeRemainingLabel.text = "-" + timeIntervalFormatter.string(from: timeRemaining)!
+        } else {
+            let elapsedTime = audioRecorder?.currentTime ?? 0
+            timeElapsedLabel.text = "--:--"
+            timeSlider.minimumValue = 0
+            timeSlider.maximumValue = 1
+            timeSlider.value = 0
+            timeRemainingLabel.text = timeIntervalFormatter.string(from: elapsedTime)!
+        }
     }
     
     deinit {
@@ -89,14 +113,14 @@ class AudioRecorderController: UIViewController {
             
             self.updateViews()
             
-//            if let audioRecorder = self.audioRecorder,
-//                self.isRecording == true {
-//
-//                audioRecorder.updateMeters()
-//                self.audioVisualizer.addValue(decibelValue: audioRecorder.averagePower(forChannel: 0))
-//
-//            }
-//
+            if let audioRecorder = self.audioRecorder,
+                self.isRecording == true {
+
+                audioRecorder.updateMeters()
+                self.audioVisualizer.addValue(decibelValue: audioRecorder.averagePower(forChannel: 0))
+
+            }
+
             if let audioPlayer = self.audioPlayer,
                 self.isPlaying == true {
 
@@ -214,7 +238,10 @@ class AudioRecorderController: UIViewController {
         do {
             audioRecorder = try AVAudioRecorder(url: recordingURL!, format: format)
             audioRecorder?.delegate = self
+            audioRecorder?.isMeteringEnabled = true
             audioRecorder?.record()
+            updateViews()
+            startTimer()
         } catch {
             preconditionFailure("The audio recorder could not be created with \(recordingURL!) and \(format)")
         }
@@ -222,6 +249,8 @@ class AudioRecorderController: UIViewController {
     
     func stopRecording() {
         audioRecorder?.stop()
+        updateViews()
+        cancelTimer()
     }
     
     // MARK: - Actions
