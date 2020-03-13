@@ -84,6 +84,10 @@ class AudioRecorderController: UIViewController {
     
     // MARK: - Playback
     
+    var isPlaying: Bool {
+        audioPlayer?.isPlaying ?? false
+    }
+    
     func loadAudio() {
         let songURL = Bundle.main.url(forResource: "piano", withExtension: "mp3")!
         
@@ -94,20 +98,24 @@ class AudioRecorderController: UIViewController {
         }
     }
     
-    /*
+    // To use on a device. Boilerplate code
     func prepareAudioSession() throws {
         let session = AVAudioSession.sharedInstance()
         try session.setCategory(.playAndRecord, options: [.defaultToSpeaker])
         try session.setActive(true, options: []) // can fail if on a phone call, for instance
     }
-    */
     
     func play() {
-        
+        do {
+            try prepareAudioSession()
+            audioPlayer?.play()
+        } catch {
+            print("Cannot play audio: \(error)")
+        }
     }
     
     func pause() {
-        
+        audioPlayer?.pause()
     }
     
     
@@ -168,7 +176,11 @@ class AudioRecorderController: UIViewController {
     // MARK: - Actions
     
     @IBAction func togglePlayback(_ sender: Any) {
-        audioPlayer?.play()
+        if isPlaying {
+            pause()
+        } else {
+            play()
+        }
     }
     
     @IBAction func updateCurrentTime(_ sender: UISlider) {
